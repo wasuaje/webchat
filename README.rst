@@ -22,7 +22,8 @@ Instalacion:
 ------------
 
 - Instale los prerequisitos
-- git clone https://github.com/wasuaje/webchat.git (en la raiz de www/ de su servidor web)
+- git clone https://github.com/wasuaje/webchat.git  , en la raiz de www/ de su servidor web
+- git clone http://rvera.github.io/image-picker/  , en la raiz de www/ de su servidor web
 - Disfrute
 ::
 
