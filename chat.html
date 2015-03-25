@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <!-- This file has been downloaded from Bootsnipp.com. Enjoy! -->
+    <title>Chatealo !</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+        body{
+    height:10px;
+    position: fixed;
+    top: 100px;
+}
+
+.chat_base{     
+     overflow-y: scroll;
+}
+.col-md-2, .col-md-10{
+    padding:0;
+}
+.panel{
+    margin-bottom: 0px;
+}
+.chat-window{
+    margin-left:10px;
+}
+.chat-window > div > .panel{
+    border-radius: 5px 5px 0 0;
+}
+.icon_minim{
+    padding:2px 10px;
+}
+.msg_container_base{
+  background: #e5e5e5;
+  margin: 0;
+  padding: 0 10px 10px;
+  max-height:300px;
+  overflow-x:hidden;
+}
+.top-bar {
+  background: #666;
+  color: white;
+  padding: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.msg_receive{
+    padding-left:0;
+    margin-left:0;
+}
+.msg_sent{
+    padding-bottom:20px !important;
+    margin-right:0;
+}
+.messages {
+  background: white;
+  padding: 10px;
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  max-width:100%;
+}
+.messages > p {
+    font-size: 13px;
+    margin: 0 0 0.2rem 0;
+  }
+.messages > time {
+    font-size: 11px;
+    color: #ccc;
+}
+.msg_container {
+    padding: 10px;
+    overflow: hidden;
+    display: flex;
+}
+img {
+    display: block;
+    width: 100%;
+}
+.avatar {
+    position: relative;
+}
+.base_receive > .avatar:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border: 5px solid #FFF;
+    border-left-color: rgba(0, 0, 0, 0);
+    border-bottom-color: rgba(0, 0, 0, 0);
+}
+
+.base_sent {
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+.base_sent > .avatar:after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    border: 5px solid white;
+    border-right-color: transparent;
+    border-top-color: transparent;
+    box-shadow: 1px 1px 2px rgba(black, 0.2); // not quite perfect but close
+}
+
+.msg_sent > time{
+    float: right;
+}
+
+
+.msg_container_base::-webkit-scrollbar-track
+{
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    background-color: #F5F5F5;
+}
+
+.msg_container_base::-webkit-scrollbar
+{
+    width: 12px;
+    background-color: #F5F5F5;
+}
+
+.msg_container_base::-webkit-scrollbar-thumb
+{
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #555;
+}
+
+.btn-group.dropup{
+    position:fixed;
+    left:0px;
+    bottom:0;
+}
+    </style>
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="js/underscore-min.js"></script>
+    <script src="js/jquery.titlealert.min.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+</head>
+<body >
+<div class="container">
+    <div class="row chat-window col-xs-5 col-md-20" id="chat_window_1" style="margin-left:100px;">
+        <div class="col-xs-20 col-md-20">
+            <div class="panel panel-default">
+                <div class="panel-heading top-bar">
+                    <div class="col-md-8 col-xs-8">
+                        <h3 class="panel-title"><span class="glyphicon glyphicon-comment">
+                                                <p id="username"></p>
+                                               </span> </h3>
+                    </div>
+                    <div class="col-md-4 col-xs-4" style="text-align: right;">
+                        <a href="#"><span id="minim_chat_window" class="glyphicon glyphicon-minus icon_minim"></span></a>
+                        <a href="#"><span class="glyphicon glyphicon-remove icon_close" data-id="chat_window_1"></span></a>
+                    </div>
+                </div>
+                <div class="panel-body msg_container_base" id="chat_base">                    
+                </div>
+                <div class="panel-footer">
+                    <div class="input-group">
+                        <input id="btn-input" type="text" class="form-control input-sm chat_input" placeholder="Write your message here..." />
+                        <span class="input-group-btn">
+                        <button class="btn btn-primary btn-sm" id="btn-chat" onclick="send_chat()">Send</button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- <div class="btn-group dropup">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            <span class="glyphicon glyphicon-cog"></span>
+            <span class="sr-only">Toggle Dropdown</span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            <li><a href="#" id="new_chat"><span class="glyphicon glyphicon-plus"></span> Novo</a></li>
+            <li><a href="#"><span class="glyphicon glyphicon-list"></span> Ver outras</a></li>
+            <li><a href="#"><span class="glyphicon glyphicon-remove"></span> Fechar Tudo</a></li>
+            <li class="divider"></li>
+            <li><a href="#"><span class="glyphicon glyphicon-eye-close"></span> Invisivel</a></li>
+        </ul>
+    </div>
+    -->
+</div>
+<script type="text/javascript">
+
+$('<audio id="chatAudio"><source src="snd/notify.ogg" type="audio/ogg"><source src="snd/notify.mp3" type="audio/mpeg"><source src="snd/notify.wav" type="audio/wav"></audio>').appendTo('body');
+
+//data del form
+var user = getUrlParameter('username');
+var avatar = getUrlParameter('image-picker');
+
+$("#username").text(user);
+
+    $(document).on('click', '.panel-heading span.icon_minim', function (e) {
+        var $this = $(this);
+        if (!$this.hasClass('panel-collapsed')) {
+            $this.parents('.panel').find('.panel-body').slideUp();
+            $this.addClass('panel-collapsed');
+            $this.removeClass('glyphicon-minus').addClass('glyphicon-plus');
+        } else {
+            $this.parents('.panel').find('.panel-body').slideDown();
+            $this.removeClass('panel-collapsed');
+            $this.removeClass('glyphicon-plus').addClass('glyphicon-minus');
+        }
+    });
+    $(document).on('focus', '.panel-footer input.chat_input', function (e) {
+        var $this = $(this);
+        if ($('#minim_chat_window').hasClass('panel-collapsed')) {
+            $this.parents('.panel').find('.panel-body').slideDown();
+            $('#minim_chat_window').removeClass('panel-collapsed');
+            $('#minim_chat_window').removeClass('glyphicon-plus').addClass('glyphicon-minus');
+        }
+    });
+    $(document).on('click', '#new_chat', function (e) {
+        var size = $( ".chat-window:last-child" ).css("margin-left");
+         size_total = parseInt(size) + 400;
+        alert(size_total);
+        var clone = $( "#chat_window_1" ).clone().appendTo( ".container" );
+        clone.css("margin-left", size_total);
+    });
+    $(document).on('click', '.icon_close', function (e) {
+        //$(this).parent().parent().parent().parent().remove();
+        $( "#chat_window_1" ).remove();
+    });
+
+    //  creo el socket como tal
+    var socket = new WebSocket("ws://10.1.125.41:7379/.json");
+    socket.onopen = function() {
+        socket.send(JSON.stringify(["SUBSCRIBE", "first"]));
+    };
+
+
+    //
+    ////apenas reciba mensaje
+    //
+    socket.onmessage = function(evt)        
+    {    
+     //alert(evt.data);
+          
+     data=evt.data;
+     obj = JSON.parse(data);    
+     //console.log(obj)
+
+     //template de respuesta 
+    var sending="<div class='row msg_container base_receive'> \
+                        <div class='col-md-2 col-xs-2 avatar'> \
+                            <img src='<%= avat %>' class=' img-responsive '>\
+                        </div>\
+                        <div class='col-md-10 col-xs-10'> \
+                            <div class='messages msg_receive'> \
+                                <p> <%= msg %> </p> \
+                                <time datetime='' >  <%= datetim %> - <%= usr %> </time> \
+                            </div> \
+                        </div> \
+                    </div>"
+    
+    var compiled = _.template(sending);
+
+    var receiving= "<div class=\"row msg_container base_sent\"> \
+                        <div class=\"col-xs-10 col-md-10\">     \
+                            <div class=\"messages msg_sent\">   \
+                                <p><%= msg %></p>               \
+                                <time datetime='' >  <%= datetim %> - <%= usr %> </time> \
+                            </div> \
+                        </div> \
+                        <div class=\"col-md-2 col-xs-2 avatar\"> \
+                            <img src=\" <%= avat %> \" class=\" img-responsive \"> \
+                        </div> \
+                    </div>"
+    var compiled2 = _.template(receiving);
+
+    
+    date=new Date();        
+    dt=date.toLocaleDateString() + "-" + date.toLocaleTimeString();
+    
+    //console.log(obj);
+    if (obj.SUBSCRIBE[2] != "1") {   
+        console.log(obj);   
+        data= obj.SUBSCRIBE[2].split("|");
+        user1=data[0];
+        msg1=data[1];
+        msg1=msg1.replace(":99","?")
+        //console.log(obj.SUBSCRIBE[2]);
+        avatar2="img/"+data[2]+".jpg";        
+        
+        //console.log(dt);
+        if (user == user1)
+             {
+                mensaje=compiled2({msg:msg1,usr:user,datetim:dt,avat:avatar2});
+            }
+            else
+            {
+                //screen blinking and sound
+                notificalo();
+                mensaje=compiled({msg:msg1,usr:user1,datetim:dt,avat:avatar2});
+            }
+
+        $("#chat_base").append(mensaje);
+        
+        }else {     //si estas entrado te anuncio como bienvenida
+
+            avatar3="4133-thumb"; 
+            msg1=""+user+" se ha unido al chat";
+            msg="Sistema: "+msg1
+            channel="first"
+            envialo(channel,user,msg,avatar3)            
+
+        }
+}
+
+//screen blinking and sound
+function notificalo(){
+    $.titleAlert("Nuevo mensaje de chat!", {
+                    requireBlur:false,
+                    stopOnFocus:false,
+                    duration:4000,
+                    interval:700
+                    });
+                $('#chatAudio')[0].play();
+}
+
+function getUrlParameter(sParam)
+{
+    var sPageURL = window.location.search.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) 
+    {
+        var sParameterName = sURLVariables[i].split('=');
+        if (sParameterName[0] == sParam) 
+        {
+            return sParameterName[1];
+        }
+    }
+}
+
+//detecto la tecla enter
+$( "#btn-input" ).keypress(function( event ) {
+    if ( event.which == 13 ) {
+        event.preventDefault();
+        send_chat();
+    }    
+});
+
+
+function send_chat(){
+    
+    msg=$("#btn-input").val();
+    //msg=msg.replace("?",":99");
+    channel="first";
+    envialo(channel,user,msg,avatar);
+    //console.log(msg);    
+     var wtf    = $("#chat_base");
+     var height = wtf[0].scrollHeight;
+     wtf.scrollTop(height);    
+    $("#btn-input").val("");
+    $("#btn-input").focus();
+    //console.log(a)
+}
+
+function envialo(chan,usr,msg,avatar){
+    msg=encodeURIComponent(msg)
+    uri="http://10.1.125.41:7379/PUBLISH/"+chan+"/"+usr+"|"+msg+"|"+avatar    
+    //mensaje=user+"|"+res+"|"+avatar
+    $.getJSON(uri, null);
+
+}
+
+</script>
+</body>
