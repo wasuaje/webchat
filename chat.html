@@ -195,6 +195,7 @@ $('<audio id="chatAudio"><source src="snd/notify.ogg" type="audio/ogg"><source s
 //data del form
 var user = getUrlParameter('username');
 var avatar = getUrlParameter('image-picker');
+var channel = getUrlParameter('chatroom');
 
 $("#username").text(user);
 
@@ -233,7 +234,7 @@ $("#username").text(user);
     //  creo el socket como tal
     var socket = new WebSocket("ws://10.1.125.41:7379/.json");
     socket.onopen = function() {
-        socket.send(JSON.stringify(["SUBSCRIBE", "first"]));
+        socket.send(JSON.stringify(["SUBSCRIBE", channel]));
     };
 
 
@@ -309,7 +310,7 @@ $("#username").text(user);
             avatar3="4133-thumb"; 
             msg1=""+user+" se ha unido al chat";
             msg="Sistema: "+msg1
-            channel="first"
+            //channel="first"
             envialo(channel,user,msg,avatar3)            
 
         }
@@ -353,7 +354,7 @@ function send_chat(){
     
     msg=$("#btn-input").val();
     //msg=msg.replace("?",":99");
-    channel="first";
+    //channel="first";
     envialo(channel,user,msg,avatar);
     //console.log(msg);    
      var wtf    = $("#chat_base");
