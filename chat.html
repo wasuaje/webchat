@@ -220,74 +220,9 @@ var user = getUrlParameter('username');
 var avatar = getUrlParameter('image-picker');
 var channel = getUrlParameter('chatroom');
 
-//pido los usuarios registrados al momento
-get_users();
-
 //scroll automatico cada 3 segundos
 var myVar=setInterval(function () {bajalo()}, 5000);
 
-//registro usarios en redis
-function register_user(data2){
-   
-   //console.log(user,data2.LRANGE,data2.LRANGE.length);
-   //console.log($.inArray( user, data2.LRANGE));
-   //console.log(data2)
-   if ( $.inArray( user, data2.LRANGE) < 0 || data2.LRANGE.length == 0){   
-     uri="http://10.1.125.41:7379/LPUSH/"+channel+"/"+user
-     $.getJSON( uri, function( data ) {
-       //console.log(data);
-        rooms = data.LPUSH;
-        lenroom = data.LPUSH.length;
-        });         
-    }
-
-    usuario="<p><b> <%= usr %> </b></p>"
-    //usuario = " <div class=\"row msg_container base_sent\"  >  \
-    //                    <div class=\"col-xs-15 col-md-10\" style=\"margin-left:0px;\">     \
-    //                        <div class=\"messages msg_sent\" >   \
-    //                        <p><%= usr %></p>               \    \
-    //                        </div>  \
-    //                    </div> \
-    //            </div> "
-    var compiled = _.template(usuario);
-    var todos=""
-    for (i=0;i<data2.LRANGE.length;i++){
-            
-            msg=compiled({usr:data2.LRANGE[i]});    
-            //$("#user_base").append(msg);
-
-            /////////////// 
-            //////////       AGREGAR USUARIOS DISTINTOS A MI !!!
-            ///////////////
-            todos=todos+msg
-            //console.log(data2.LRANGE[i])
-            }
-            //console.log(todos)
-            $("#user_base").html(todos);
-        
-    }
-
-//cuando cierren la ventana del chat los deregistro jejeje
-window.onbeforeunload = deregister_user;
-
-function deregister_user(){
-    //LREM Infra 0 wasuaje
-    uri="http://10.1.125.41:7379/LREM/"+channel+"/0/"+user;
-    $.getJSON( uri )  ;
-    
-    uri2="http://10.1.125.41:7379/UNSUBSCRIBE/"+channel;
-    $.getJSON( uri2 )  ;
-    
-    return null;
-
-    }
-
-function get_users(){
-
-    uri="http://10.1.125.41:7379/LRANGE/"+channel+"/0/-1"
-    $.getJSON( uri, register_user  )             
-    
-}
 
 $("#username").text(user);
 
@@ -324,14 +259,15 @@ $("#username").text(user);
     });
 
     //  creo el socket como tal
-    var socket = new WebSocket("ws://10.1.125.41:7379/.json");
+    var socket = new WebSocket("ws://localhost:7379/.json");
     socket.onopen = function() {
         socket.send(JSON.stringify(["SUBSCRIBE", channel]));                    
     };    
 
-    //
-    ////apenas reciba mensaje
-    //
+    ///////////////////////////////
+    ////  apenas reciba mensaje  //
+    ///////////////////////////////
+
     socket.onmessage = function(evt)        
     {    
      //alert(evt.data);
@@ -374,37 +310,170 @@ $("#username").text(user);
     
     //console.log(obj);
     if (obj.SUBSCRIBE[2] != "1") {   
-        //console.log(obj);   
+        //console.log(data);   
         data= obj.SUBSCRIBE[2].split("|");
+        //console.log(data);
         user1=data[0];
         msg1=data[1];
+        priv=data[3];
+        sala=data[4];
         //msg1=msg1.replace(":99","?")
         //console.log(obj.SUBSCRIBE[2]);
-        avatar2="img/"+data[2]+".jpg";        
+
+        tmpavat=data[2].replace("-jpg",".jpg");
+        avatar2="img/"+tmpavat;
+        console.log(avatar2);
         
-        //console.log(dt);
+       //console.log(user);
+       // console.log(user1);
         if (user == user1)
              {
+                //si el mensaje es tuyo justificado a la derecha
                 mensaje=compiled2({msg:msg1,usr:user,datetim:dt,avat:avatar2});
-            }
-            else
-            {
+             }else{
+
                 //screen blinking and sound
-                notificalo();
-                mensaje=compiled({msg:msg1,usr:user1,datetim:dt,avat:avatar2});
-            }
+                // en cualquier caso notifico
+                notificalo();        
+                //console.log(priv);
+                //console.log(sala);
+                if ( priv  && sala ) {
+                                        
+                    msg=" <%= usr1 %> Te ha invitado a un chat <a href='_' onclick=\"join_private_chat('<%= sla %>');return false;\"> Privado </a>"                    
+                    var compiled = _.template(msg);
+                      mensaje=compiled({sla:sala,usr1:user1});
+
+                }else{
+                
+                      //si el mensaje es de otro justificado a la izquierda
+                      mensaje=compiled({msg:msg1,usr:user1,datetim:dt,avat:avatar2});
+                }
+             }
+
+        //CONDICION CON NUEVO PARAMETRO AL FINAL, private
+        // si private=user (usuario actual), muestro mensaje
+        // si private!=user no hago nada
 
         $("#chat_base").append(mensaje);
         
         }else {     //si estas entrado te anuncio como bienvenida
 
-            avatar3="4133-thumb"; 
+            avatar3="4133-thumb.jpg"; 
             msg1=""+user+" se ha unido al chat";
             msg="Sistema: "+msg1
             //channel="first"
             envialo(channel,user,msg,avatar3)            
 
         }
+}
+
+
+//pido los usuarios registrados al momento
+get_users();
+
+//registro usarios en redis
+function register_user(data2){
+   
+   //console.log(user,data2.LRANGE,data2.LRANGE.length);
+   //console.log($.inArray( user, data2.LRANGE));
+   //console.log(data2)
+   if ( $.inArray( user, data2.LRANGE) < 0 || data2.LRANGE.length == 0){   
+     uri="http://localhost:7379/LPUSH/"+channel+"/"+user
+     $.getJSON( uri, function( data ) {
+       //console.log(data);
+        rooms = data.LPUSH;
+        lenroom = data.LPUSH.length;
+        });         
+    }
+
+    usuario="<a href='_' onclick=\"private_chat('<%= usr %>');return false;\"> <%= usr %> </a>"
+    //usuario="<p><b> <%= usr %> </b></p>"    
+    var compiled = _.template(usuario);
+    var todos=""
+
+    for (i=0;i<data2.LRANGE.length;i++){            
+            msg=compiled({usr:data2.LRANGE[i]});    
+            //$("#user_base").append(msg);
+            
+            if (data2.LRANGE[i] != user){
+                todos=todos+msg
+                //console.log(data2.LRANGE[i])
+                }
+            }
+            //console.log(todos)            
+            $("#user_base").html(todos);
+        
+    }
+
+function guid() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+
+//aqui creo la sala virtual con este usuario y me uno
+function private_chat(usr){    
+    var user_p = user;
+    var avatar_p = avatar;
+    var uuid = guid();
+    var channel_p = uuid;
+    //alert(uuid);
+    //abro la ventana para el usuario actual
+    uri='/chat.html?username=<%= us %>&chatroom=<%= ch %>&image-picker=<%= av %>'
+    var compiled = _.template(uri);
+    uri=compiled({us:user_p,ch:channel_p,av:avatar_p})
+    //console.log(uri)
+    //uri=encodeURI(uri)
+
+    window.open(uri);
+    envialo(channel,user,msg,avatar,usr,channel_p);
+    //invito al usuario al chat privado
+    //esto le debe aparecer en su ventana actual    
+    //envio mensaje con ultimo parametro
+    
+    
+}
+
+//aqui se une el usuario a quien invite a la sala
+function join_private_chat(sala){
+    var user_p = user;
+    var avatar_p = avatar;    
+    var channel_p = sala;
+    //alert(uuid);
+    //abro la ventana para el usuario actual
+    uri='/chat.html?username=<%= us %>&chatroom=<%= ch %>&image-picker=<%= av %>'
+    var compiled = _.template(uri);
+    uri=compiled({us:user_p,ch:channel_p,av:avatar_p})
+    //console.log(uri)
+    //uri=encodeURI(uri)
+    window.open(uri);
+
+}
+
+//cuando cierren la ventana del chat los deregistro jejeje
+window.onbeforeunload = deregister_user;
+
+function deregister_user(){
+    //LREM Infra 0 wasuaje
+    uri="http://localhost:7379/LREM/"+channel+"/0/"+user;
+    $.getJSON( uri )  ;
+    
+    uri2="http://localhost:7379/UNSUBSCRIBE/"+channel;
+    $.getJSON( uri2 )  ;
+    
+    return null;
+
+    }
+
+function get_users(){
+
+    uri="http://localhost:7379/LRANGE/"+channel+"/0/-1"
+    $.getJSON( uri, register_user  )             
+    
 }
 
 //screen blinking and sound
@@ -461,10 +530,20 @@ function bajalo(){
      get_users();
 }
 
-function envialo(chan,usr,msg,avatar){
+function envialo(chan,usr,msg,avatar,priv,sala){
     msg=encodeURIComponent(msg)
-    uri="http://10.1.125.41:7379/PUBLISH/"+chan+"/"+usr+"|"+msg+"|"+avatar    
+    
+    //webdis no inserta puntos en redis
+    avatar=avatar.replace(".","-")
+
+    if (priv && sala){        
+        uri="http://localhost:7379/PUBLISH/"+chan+"/"+usr+"|"+msg+"|"+avatar+"|"+priv+"|"+sala    
+    }else{
+        uri="http://localhost:7379/PUBLISH/"+chan+"/"+usr+"|"+msg+"|"+avatar    
+        
+    }
     //mensaje=user+"|"+res+"|"+avatar
+    //console.log("asdasdas"+uri);
     $.getJSON(uri, null);
 
 }
